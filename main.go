@@ -6,13 +6,19 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/drithh/smart-classroom/database"
 	"github.com/drithh/smart-classroom/fiber"
 	mqtt "github.com/drithh/smart-classroom/mqtt"
 	pahomqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 func main() {
-	fiber.SetupFiber()
+	database.ConnectDB()
+	defer database.CloseDB()
+
+	db := database.GetDB()
+
+	fiber.SetupFiber(db)
 
 	var broker = "localhost"
 	var port = 1883

@@ -1,19 +1,19 @@
 CREATE TABLE pir_sensor_data (
     id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP,
+    timestamp TIMESTAMP default CURRENT_TIMESTAMP,
     presence BOOLEAN
 );
 
 CREATE TABLE dht11_sensor_data (
     id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP,
+    timestamp TIMESTAMP default CURRENT_TIMESTAMP,
     temperature DECIMAL(5, 2),
     humidity DECIMAL(5, 2)
 );
 
 CREATE TABLE ldr_sensor_data (
     id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP,
+    timestamp TIMESTAMP default CURRENT_TIMESTAMP,
     light_intensity INTEGER
 );
 
