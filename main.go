@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	fiber.SetupFiber()
+
 	var broker = "localhost"
 	var port = 1883
 
@@ -21,8 +23,6 @@ func main() {
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
-
-	fiber.SetupFiber()
 
 	// Wait for a signal to interrupt the program
 	c := make(chan os.Signal, 1)

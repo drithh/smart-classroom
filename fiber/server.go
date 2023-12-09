@@ -3,11 +3,14 @@ package fiber
 import (
 	"fmt"
 
+	db "github.com/drithh/smart-classroom/database"
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupFiber() {
 	app := fiber.New()
+	db.ConnectDB()
+	defer db.CloseDB()
 
 	// Define your Fiber routes and handlers here
 	// For example, a simple route to handle HTTP requests
