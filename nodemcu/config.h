@@ -10,15 +10,15 @@ const char *password = "informatika";
 const char *mqtt_server = "192.168.1.8";
 // Device-specific MQTT credentials
 #ifdef DEVICE1
-const char *mqtt_username = "pir";
-const char *mqtt_password = "pir_password";
-const char *mqtt_client_id = "pir";
+const char *mqtt_username = "pir_dht11";
+const char *mqtt_password = "pir_dht11_password";
+const char *mqtt_client_id = "pir_dht11";
 #endif
 
 #ifdef DEVICE2
-const char *mqtt_username = "dht11_ldr";
-const char *mqtt_password = "dht11_ldr_password";
-const char *mqtt_client_id = "dht11_ldr";
+const char *mqtt_username = "ldr";
+const char *mqtt_password = "ldr_password";
+const char *mqtt_client_id = "ldr";
 #endif
 
 #endif // CONFIG_H
