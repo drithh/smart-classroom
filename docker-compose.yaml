@@ -21,10 +21,13 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=classroom
-  classroom:
+  web-server:
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
+    depends_on:
+      - postgres
+      - emqx
     ports:
       - '80:3000'

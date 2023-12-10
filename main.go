@@ -20,7 +20,7 @@ func main() {
 
 	fiber.SetupFiber(db)
 
-	var broker = "localhost"
+	var broker = "host.docker.internal"
 	var port = 1883
 
 	opts := mqtt.NewMQTTClientOptions(broker, port)

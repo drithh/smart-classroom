@@ -12,7 +12,7 @@ import (
 var db *sqlx.DB
 
 func ConnectDB() {
-	connString := "user=postgres password=postgres host=localhost port=5432 dbname=classroom sslmode=disable"
+	connString := "user=postgres password=postgres host=host.docker.internal port=5432 dbname=classroom sslmode=disable"
 
 	var err error
 	db, err = sqlx.Connect("pgx", connString)
