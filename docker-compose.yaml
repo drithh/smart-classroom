@@ -22,8 +22,9 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=classroom
   classroom:
-    context: .
-    dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
     ports:
-      - '3000:3000'
+      - '80:3000'
