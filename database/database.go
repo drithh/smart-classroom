@@ -12,7 +12,18 @@ import (
 var db *sqlx.DB
 
 func ConnectDB() {
-	connString := "user=postgres password=postgres host=host.docker.internal port=5432 dbname=classroom sslmode=disable"
+	host := os.Getenv("DATABASE_HOST")
+	port := os.Getenv("DATABASE_PORT")
+	user := os.Getenv("DATABASE_USER")
+	password := os.Getenv("DATABASE_PASSWORD")
+	dbname := os.Getenv("DATABASE_DB")
+
+	if host == "" || port == "" || user == "" || password == "" || dbname == "" {
+		fmt.Println("Error: DATABASE_HOST, DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, and DATABASE_DB environment variables must be set")
+		os.Exit(1)
+	}
+
+	connString := "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + dbname
 
 	var err error
 	db, err = sqlx.Connect("pgx", connString)
