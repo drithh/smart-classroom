@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+    />
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+  </head>
+
+  <body>
+    <header>
+      <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+        <div class="container">
+          <a class="navbar-brand" href="#">Smart Classroom Dashboard</a>
+          <!-- <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="collapsibleNavId">
+                    <ul class="navbar-nav me-auto mt-2 mt-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" aria-current="page">Home <span
+                                    class="visually-hidden">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Link</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="dropdownId" data-bs-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                            <div class="dropdown-menu" aria-labelledby="dropdownId">
+                                <a class="dropdown-item" href="#">Action 1</a>
+                                <a class="dropdown-item" href="#">Action 2</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div> -->
+        </div>
+      </nav>
+    </header>
+
+    <div class="bg-light pt-4">
+      <div class="row d-flex justify-content-evenly">
+        <div class="col-5 col-md-2 mb-3">
+          <a
+            href="#motion-chart-container"
+            data-bs-toggle="collapse"
+            class="text-decoration-none"
+          >
+            <div class="card border-0">
+              <div class="card-body">
+                <div class="fs-5 text-center text-secondary">Last Motion</div>
+                <div class="d-flex align-items-center justify-content-evenly">
+                  <!-- <div>
+                    <i
+                      class="bi bi-person-standing"
+                      style="font-size: 3rem; color: #4dd4ac"
+                    ></i>
+                  </div> -->
+                  <div
+                    class="fs-1 fw-bold ms-2 text-center"
+                    style="color: #4dd4ac"
+                  >
+                    {{ GetTimeSince .Pir.Timestamp }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="col-5 col-md-2 mb-3">
+          <a
+            href="#brightness-chart-container"
+            data-bs-toggle="collapse"
+            class="text-decoration-none"
+          >
+            <div class="card border-0">
+              <div class="card-body">
+                <div class="fs-5 text-center text-secondary">Brightness</div>
+                <div class="d-flex align-items-center justify-content-evenly">
+                  <div>
+                    <i
+                      class="bi bi-brightness-high"
+                      style="font-size: 3rem; color: #4dd4ac"
+                    ></i>
+                  </div>
+                  <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
+                    {{ .Ldr.Brightness }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-5 col-md-2 mb-3">
+          <a
+            href="#temperature-chart-container"
+            data-bs-toggle="collapse"
+            class="text-decoration-none"
+          >
+            <div class="card border-0">
+              <div class="card-body">
+                <div class="fs-5 text-center text-secondary">Temperature</div>
+                <div class="d-flex align-items-center justify-content-evenly">
+                  <div>
+                    <i
+                      class="bi bi-thermometer"
+                      style="font-size: 3rem; color: #4dd4ac"
+                    ></i>
+                  </div>
+                  <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
+                    {{ .Dht11.Temperature }}°C
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-5 col-md-2 mb-3">
+          <a
+            href="#humidity-chart-container"
+            data-bs-toggle="collapse"
+            class="text-decoration-none"
+          >
+            <div class="card border-0">
+              <div class="card-body">
+                <div class="fs-5 text-center text-secondary">Humidity</div>
+                <div class="d-flex align-items-center justify-content-evenly">
+                  <div>
+                    <i
+                      class="bi bi-droplet"
+                      style="font-size: 3rem; color: #4dd4ac"
+                    ></i>
+                  </div>
+                  <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
+                    {{ .Dht11.Humidity }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div id="chart-collapse-group">
+          <div class="collapse show" id="motion-chart-container">
+            <div class="mb-3 row justify-content-center">
+              <div class="col-10 col-md-6">
+                <div class="card border-0 bg-white">
+                  <canvas id="motion-chart" class=""></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="collapse" id="brightness-chart-container">
+            <div class="mb-3 row justify-content-center">
+              <div class="col-10 col-md-6">
+                <div class="card border-0 bg-white">
+                  <canvas id="brightness-chart" class=""></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="collapse" id="temperature-chart-container">
+            <div class="mb-3 row justify-content-center">
+              <div class="col-10 col-md-6">
+                <div class="card border-0 bg-white">
+                  <canvas id="temperature-chart" class=""></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="collapse" id="humidity-chart-container">
+            <div class="mb-3 row justify-content-center">
+              <div class="col-10 col-md-6">
+                <div class="card border-0 bg-white">
+                  <canvas id="humidity-chart" class=""></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container mt-3">
+      <h4 class="text-secondary mb-3">Brightness Setting</h4>
+      <div class="row justify-content-evenly">
+        <form
+          class="col-3 d-flex flex-column align-items-center justify-content-center card"
+        >
+          <div>Lamp 1</div>
+          <input type="hidden" name="device_id" value="{{ .Lamp1.DeviceId }}" />
+          <i
+            hx-post="/devices/lamp"
+            hx-trigger="click"
+            class="bi fs-1 mt-2 {{ if .Lamp1.Status }}bi-lightbulb-fill text-warning {{ else }}bi-lightbulb text-secondary{{ end }}"
+            style="cursor: pointer"
+            id="toggle-lamp-1"
+            onclick="toggleLamp('toggle-lamp-1', 'status-lamp-1')"
+          >
+          </i>
+          <input
+            id="status-lamp-1"
+            type="hidden"
+            name="status"
+            value="{{ .Lamp1.Status }}"
+          />
+          <input
+            hx-post="/devices/lamp"
+            type="range"
+            name="brightness"
+            id="brightness-slider-1"
+            class="mt-2 w-100"
+            value='{{ GetSettingValue .Lamp1 "brightness"}}'
+          />
+          <div
+            id="output-brightness-slider-1"
+            class="mt-2 text-secondary"
+          ></div>
+        </form>
+        <form
+          class="col-3 d-flex flex-column align-items-center justify-content-center card"
+        >
+          <div>Lamp 2</div>
+          <input type="hidden" name="device_id" value="{{ .Lamp2.DeviceId }}" />
+          <i
+            hx-post="/devices/lamp"
+            hx-trigger="click"
+            class="bi fs-1 mt-2 {{ if .Lamp2.Status }}bi-lightbulb-fill text-warning {{ else }}bi-lightbulb text-secondary{{ end }}"
+            style="cursor: pointer"
+            id="toggle-lamp-2"
+            onclick="toggleLamp('toggle-lamp-2', 'status-lamp-2')"
+          ></i>
+          <input
+            id="status-lamp-2"
+            type="hidden"
+            name="status"
+            value="{{ .Lamp2.Status }}"
+          />
+          <input
+            type="range"
+            hx-post="/devices/lamp"
+            name="brightness"
+            id="brightness-slider-2"
+            class="mt-2 w-100"
+            value='{{ GetSettingValue .Lamp2 "brightness"}}'
+          />
+          <div
+            id="output-brightness-slider-2"
+            class="mt-2 text-secondary"
+          ></div>
+        </form>
+        <form
+          class="col-3 d-flex flex-column align-items-center justify-content-center card"
+        >
+          <div>Lamp 3</div>
+          <input type="hidden" name="device_id" value="{{ .Lamp3.DeviceId }}" />
+          <i
+            hx-post="/devices/lamp"
+            hx-trigger="click"
+            class="bi fs-1 mt-2 {{ if .Lamp3.Status }}bi-lightbulb-fill text-warning {{ else }}bi-lightbulb text-secondary{{ end }}"
+            style="cursor: pointer"
+            id="toggle-lamp-3"
+            onclick="toggleLamp('toggle-lamp-3', 'status-lamp-3')"
+          ></i>
+          <input
+            id="status-lamp-3"
+            type="hidden"
+            name="status"
+            value="{{ .Lamp3.Status }}"
+          />
+          <input
+            type="range"
+            hx-post="/devices/lamp"
+            name="brightness"
+            id="brightness-slider-3"
+            class="mt-2 w-100"
+            value='{{ GetSettingValue .Lamp3 "brightness"}}'
+          />
+          <div
+            id="output-brightness-slider-3"
+            class="mt-2 text-secondary"
+          ></div>
+        </form>
+      </div>
+
+      <h4 class="text-secondary my-3">AC Setting</h4>
+      <form class="row justify-content-evenly mb-5">
+        <input type="hidden" name="device_id" value="{{ .Ac.DeviceId }}" />
+        <div
+          class="col-3 d-flex flex-column align-items-center justify-content-center card"
+        >
+          <div>Temperature</div>
+          <div id="ac-temp" class="fs-1 mb-2">
+            {{GetSettingValue .Ac "temperature"}}
+          </div>
+          <div class="row align-items-center justify-content-around mb-2 w-100">
+            <div class="col-6 col-md-2 p-0 d-flex justify-content-center">
+              <button
+                hx-post="/devices/ac"
+                hx-swap="none"
+                type="button"
+                class="btn py-1 px-2"
+                style="border-color: #4dd4ac !important"
+                onclick="plusMinus('ac-temp', 'minus')"
+              >
+                <i class="bi bi-dash fs-4" style="color: #4dd4ac"></i>
+              </button>
+            </div>
+            <div class="col-6 col-md-2 p-0 d-flex justify-content-center">
+              <button
+                hx-post="/devices/ac"
+                hx-swap="none"
+                type="button"
+                class="btn py-1 px-2"
+                style="border-color: #4dd4ac !important"
+                onclick="plusMinus('ac-temp', 'plus')"
+              >
+                <i class="bi bi-plus fs-4" style="color: #4dd4ac"></i>
+              </button>
+            </div>
+            <input
+              type="hidden"
+              name="temperature"
+              value='{{ GetSettingValue .Ac "temperature" }}'
+            />
+          </div>
+        </div>
+        <div class="col-3">
+          <div
+            class="d-flex flex-column align-items-center justify-content-center card"
+          >
+            <div>ON/OFF</div>
+            <i
+              hx-post="/devices/ac"
+              hx-swap="none"
+              class="bi {{ if .Ac.Status }}bi-toggle-on{{ else }}bi-toggle-off{{ end }}"
+              style="font-size: 3rem; color: #4dd4ac; cursor: pointer"
+              id="toggle-onOff"
+              onclick="toggleSwing('toggle-onOff')"
+            ></i>
+            <input
+              id="status-ac"
+              type="hidden"
+              name="status"
+              value="{{ .Ac.Status }}"
+            />
+          </div>
+          <div
+            class="d-flex flex-column align-items-center justify-content-center card"
+          >
+            <div>Swing</div>
+            <i
+              hx-post="/devices/ac"
+              hx-swap="none"
+              class='bi {{ if eq (GetSettingValue .Ac "swing") "on" }}bi-toggle-on{{ else }}bi-toggle-off{{ end }}'
+              style="font-size: 3rem; color: #4dd4ac; cursor: pointer"
+              id="toggle-swing"
+              onclick="toggleSwing('toggle-swing')"
+            ></i>
+            <input
+              type="hidden"
+              id="swing"
+              name="swing"
+              value='{{GetSettingValue .Ac "swing"}}'
+            />
+          </div>
+        </div>
+        <div
+          class="col-3 d-flex flex-column align-items-center justify-content-center card"
+        >
+          <div>Fan Speed</div>
+          <div id="ac-fan" class="fs-1 mb-2">
+            {{ GetSettingValue .Ac "fan_speed" }}
+          </div>
+          <div class="row align-items-center justify-content-around w-100 mb-2">
+            <div class="col-6 col-md-2 p-0 d-flex justify-content-center">
+              <button
+                hx-post="/devices/ac"
+                hx-swap="none"
+                type="button"
+                class="btn py-1 px-2"
+                style="border-color: #4dd4ac !important"
+                onclick="plusMinus('ac-fan', 'minus')"
+              >
+                <i class="bi bi-dash fs-4" style="color: #4dd4ac"></i>
+              </button>
+            </div>
+            <div class="col-6 col-md-2 p-0 d-flex justify-content-center">
+              <button
+                hx-post="/devices/ac"
+                hx-swap="none"
+                type="button"
+                class="btn py-1 px-2"
+                style="border-color: #4dd4ac !important"
+                onclick="plusMinus('ac-fan', 'plus')"
+              >
+                <i class="bi bi-plus fs-4" style="color: #4dd4ac"></i>
+              </button>
+            </div>
+          </div>
+          <input
+            type="hidden"
+            name="fan_speed"
+            value='{{ GetSettingValue .Ac "fan_speed" }}'
+          />
+        </div>
+      </form>
+    </div>
+
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+      integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const motionCtx = document.getElementById('motion-chart');
+
+      let motionChart = new Chart(motionCtx, {
+        type: 'line',
+        data: {
+          datasets: [
+            {
+              label: 'Motion',
+              data: {
+                1: 'YES',
+                2: 'NO',
+                3: 'YES',
+                4: 'YES',
+              },
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              type: 'category',
+              labels: ['YES', 'NO'],
+              position: 'left',
+              offset: true,
+            },
+          },
+        },
+      });
+
+      const brightnessCtx = document.getElementById('brightness-chart');
+
+      let brightnessChart = new Chart(brightnessCtx, {
+        type: 'line',
+        data: {
+          labels: ['1', '2', '3', '4', '5', '6'],
+          datasets: [
+            {
+              label: 'Brightness',
+              data: [100, 80, 40, 50, 0, 70],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      const temperatureCtx = document.getElementById('temperature-chart');
+
+      let tempChart = new Chart(temperatureCtx, {
+        type: 'line',
+        data: {
+          labels: ['1', '2', '3', '4', '5', '6'],
+          datasets: [
+            {
+              label: 'Temperature',
+              data: [20, 18, 21, 19, 17, 16],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      const humidityCtx = document.getElementById('humidity-chart');
+
+      let humidityChart = new Chart(humidityCtx, {
+        type: 'line',
+        data: {
+          labels: ['1', '2', '3', '4', '5', '6'],
+          datasets: [
+            {
+              label: 'Humidity',
+              data: [100, 80, 40, 50, 0, 70],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    </script>
+    <script>
+      function toggleLamp(id, statusId) {
+        let statusCtx = document.getElementById(statusId);
+        statusCtx.value = statusCtx.value === 'true' ? 'false' : 'true';
+        let ctx = document.getElementById(id);
+        if (ctx.classList.contains('bi-lightbulb-fill')) {
+          ctx.classList.replace('bi-lightbulb-fill', 'bi-lightbulb');
+          ctx.classList.replace('text-warning', 'text-secondary');
+        } else if (ctx.classList.contains('bi-lightbulb')) {
+          ctx.classList.replace('bi-lightbulb', 'bi-lightbulb-fill');
+          ctx.classList.replace('text-secondary', 'text-warning');
+        }
+      }
+
+      function toggleSwing(id) {
+        let statusCtx = document.getElementById('status-ac');
+        let swingCtx = document.getElementById('swing');
+        if (id === 'toggle-onOff') {
+          statusCtx.value = statusCtx.value === 'true' ? 'false' : 'true';
+        } else {
+          swingCtx.value = swingCtx.value === 'on' ? 'off' : 'on';
+        }
+        let ctx = document.getElementById(id);
+        if (ctx.classList.contains('bi-toggle-off')) {
+          ctx.classList.replace('bi-toggle-off', 'bi-toggle-on');
+        } else if (ctx.classList.contains('bi-toggle-on')) {
+          ctx.classList.replace('bi-toggle-on', 'bi-toggle-off');
+        }
+      }
+
+      function plusMinus(id, type) {
+        let ctx = document.getElementById(id);
+        let value = parseInt(ctx.innerText);
+
+        const query = id === 'ac-temp' ? 'temperature' : 'fan_speed';
+        let input = document.querySelector(`input[name=${query}]`);
+        if (type == 'plus') {
+          if (id == 'ac-temp' && value == 30) return;
+          if (id == 'ac-fan' && value == 3) return;
+          ctx.innerHTML = value + 1;
+          input.value = value + 1;
+        } else if (type == 'minus') {
+          if (id == 'ac-temp' && value == 16) return;
+          if (id == 'ac-fan' && value == 1) return;
+          ctx.innerHTML = value - 1;
+          input.value = value - 1;
+        }
+      }
+    </script>
+    <script>
+      var collapseGroup = $('#chart-collapse-group');
+      collapseGroup.on('show.bs.collapse', '.collapse', function () {
+        collapseGroup.find('.collapse').collapse('hide');
+      });
+    </script>
+  </body>
+</html>

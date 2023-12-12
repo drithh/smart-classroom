@@ -39,7 +39,7 @@ INSERT INTO devices (device_id, status) VALUES
 -- AC Settings
 INSERT INTO device_settings (device_id, setting_name, setting_value) VALUES
 ('ac1', 'temperature', '23'),
-('ac1', 'fan_speed', 'medium'),
+('ac1', 'fan_speed', '1'),
 ('ac1', 'swing', 'on');
 
 -- Lamp Settings

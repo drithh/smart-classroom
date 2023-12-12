@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/drithh/smart-classroom/database"
+	"github.com/drithh/smart-classroom/types"
 	pahomqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -14,63 +15,17 @@ var pirTopic = "classroom/sensor/pir"
 var ldrTopic = "classroom/sensor/ldr"
 var dht11Topic = "classroom/sensor/dht11"
 
-type PirSensorData struct {
-	PirStatus int
-}
-
-type LdrSensorData struct {
-	LdrValue int
-}
-
-type Dht11SensorData struct {
-	Temperature float32
-	Humidity    float32
-}
-
-type Led struct {
-	Led        bool `json:"led"`
-	Brightness int  `json:"brightness"`
-}
-
-type Ac struct {
-	Ac          bool `json:"ac"`
-	FanSpeed    int  `json:"fan_speed"`
-	Temperature int  `json:"temperature"`
-}
-
-type Device struct {
-	Id       int    `db:"id"`
-	DeviceId string `db:"device_id"`
-	Status   bool   `db:"status"`
-}
-type Setting struct {
-	Pir   PirSensorData
-	Ldr   LdrSensorData
-	Dht11 Dht11SensorData
-	Ac    Device
-	Lamp1 Device
-	Lamp2 Device
-	Lamp3 Device
-}
-
-type DeviceSetting struct {
-	Id           int    `db:"id"`
-	DeviceId     string `db:"device_id"`
-	SettingName  string `db:"setting_name"`
-	SettingValue string `db:"setting_value"`
-}
-
-var setting = Setting{
-	Ac: Device{
+var setting = types.Setting{
+	Ac: types.Device{
 		Status: true,
 	},
-	Lamp1: Device{
+	Lamp1: types.Device{
 		Status: true,
 	},
-	Lamp2: Device{
+	Lamp2: types.Device{
 		Status: true,
 	},
-	Lamp3: Device{
+	Lamp3: types.Device{
 		Status: true,
 	},
 }
@@ -81,16 +36,14 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 	db := database.GetDB()
 	switch msg.Topic() {
 	case pirTopic:
-		marshalledData := PirSensorData{}
+		marshalledData := types.PirSensorData{}
 		err := json.Unmarshal(msg.Payload(), &marshalledData)
 		if err != nil {
 			fmt.Println("Error unmarshalling data: ", err)
 		}
 		fmt.Println("PIR sensor data received with value: ", marshalledData.PirStatus)
 
-		status := marshalledData.PirStatus == 1
-
-		_, err = db.Exec("INSERT INTO pir_sensor_data (presence) VALUES ($1)", status)
+		_, err = db.Exec("INSERT INTO pir_sensor_data (presence) VALUES ($1)", marshalledData.PirStatus)
 		if err != nil {
 			fmt.Println("Error inserting data into database: ", err)
 		}
@@ -99,13 +52,13 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 		if setting.Pir.PirStatus != marshalledData.PirStatus {
 			setting.Pir = marshalledData
 			fmt.Println("PIR sensor data changed to: ", marshalledData.PirStatus)
-			if setting.Pir.PirStatus == 0 {
+			if !setting.Pir.PirStatus {
 				if !setting.Lamp1.Status && !setting.Lamp2.Status && !setting.Lamp3.Status {
 					fmt.Println("Every lamp is off, returning")
 
 				} else {
 					fmt.Println("Turning off every lamp")
-					lamps := []Device{}
+					lamps := []types.Device{}
 					err = db.Select(&lamps, "SELECT * FROM devices WHERE device_id similar to 'lamp%'")
 
 					if err != nil {
@@ -116,7 +69,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 						topic := fmt.Sprintf("classroom/actuator/%s", lamp.DeviceId)
 
 						// make it json
-						led := Led{
+						led := types.Led{
 							Led:        false,
 							Brightness: 0,
 						}
@@ -140,7 +93,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 						case "lamp3":
 							setting.Lamp3.Status = false
 						}
-						_, err = db.Exec("UPDATE devices SET status = $1 WHERE id = $2", false, lamp.Id)
+						_, err = db.Exec("UPDATE devices SET status = $1 WHERE device_id = $2", false, lamp.DeviceId)
 
 						if err != nil {
 							fmt.Println("Error updating data into database: ", err)
@@ -155,7 +108,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 					topic := "classroom/actuator/ky005"
 
 					// make it json
-					ac := Ac{
+					ac := types.Ac{
 						Ac:          false,
 						FanSpeed:    0,
 						Temperature: 24,
@@ -182,26 +135,26 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 			}
 		}
 	case ldrTopic:
-		marshalledData := LdrSensorData{}
+		marshalledData := types.LdrSensorData{}
 		err := json.Unmarshal(msg.Payload(), &marshalledData)
 		if err != nil {
 			fmt.Println("Error unmarshalling data: ", err)
 		}
-		fmt.Println("LDR sensor data received with value: ", marshalledData.LdrValue)
+		fmt.Println("LDR sensor data received with value: ", marshalledData.Brightness)
 
-		_, err = db.Exec("INSERT INTO ldr_sensor_data (light_intensity) VALUES ($1)", marshalledData.LdrValue)
+		_, err = db.Exec("INSERT INTO ldr_sensor_data (light_intensity) VALUES ($1)", marshalledData.Brightness)
 
 		if err != nil {
 			fmt.Println("Error inserting data into database: ", err)
 		}
 
 		// if settings.pir is 0 then return
-		if setting.Pir.PirStatus == 0 {
+		if !setting.Pir.PirStatus {
 			return
 		}
 
 		// select lamp
-		lamps := []DeviceSetting{}
+		lamps := []types.DeviceSetting{}
 		err = db.Select(&lamps, "SELECT * FROM device_settings WHERE device_id similar to 'lamp%'")
 
 		if err != nil {
@@ -209,7 +162,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 		}
 
 		// map brightness value from 0-1023 to 0-100
-		brightness := 100 - int(float32(marshalledData.LdrValue)/1023*100)
+		brightness := 100 - int(float32(marshalledData.Brightness)/1023*100)
 
 		for _, lamp := range lamps {
 			topic := fmt.Sprintf("classroom/actuator/%s", lamp.DeviceId)
@@ -230,7 +183,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 				fmt.Println("Brightness value for ", lamp.DeviceId, " is: ", expectedBrightness, "with lamp setting value: ", lampBrightness, "and ldr value: ", brightness)
 
 				// make it json
-				led := Led{
+				led := types.Led{
 					Led:        true,
 					Brightness: expectedBrightness,
 				}
@@ -253,7 +206,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 				case "lamp3":
 					setting.Lamp3.Status = true
 				}
-				_, err = db.Exec("UPDATE devices SET status = $1 WHERE id = $2", false, lamp.Id)
+				_, err = db.Exec("UPDATE devices SET status = $1 WHERE device_id = $2", true, lamp.DeviceId)
 
 				if err != nil {
 					fmt.Println("Error updating data into database: ", err)
@@ -265,7 +218,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 		}
 
 	case dht11Topic:
-		marshalledData := Dht11SensorData{}
+		marshalledData := types.Dht11SensorData{}
 		err := json.Unmarshal(msg.Payload(), &marshalledData)
 		if err != nil {
 			fmt.Println("Error unmarshalling data: ", err)
@@ -279,12 +232,12 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 
 		currentTime := time.Now().Unix()
 		// if settings.pir is 0 then return
-		if setting.Pir.PirStatus == 0 || currentTime-lastUpdatedAcTime < 10 {
+		if !setting.Pir.PirStatus || currentTime-lastUpdatedAcTime < 10 {
 			return
 		}
 
 		// select ac
-		acs := []DeviceSetting{}
+		acs := []types.DeviceSetting{}
 		err = db.Select(&acs, "SELECT * FROM device_settings WHERE device_id similar to 'ac%'")
 		if err != nil {
 			fmt.Println("Error selecting data from database: ", err)
@@ -307,13 +260,9 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 					fmt.Println("Error converting ac setting value to int: ", err)
 				}
 			case "fan_speed":
-				switch ac.SettingValue {
-				case "low":
-					acSetting.FanSpeed = 1
-				case "medium":
-					acSetting.FanSpeed = 2
-				case "high":
-					acSetting.FanSpeed = 3
+				acSetting.FanSpeed, err = strconv.Atoi(ac.SettingValue)
+				if err != nil {
+					fmt.Println("Error converting ac setting value to int: ", err)
 				}
 			case "swing":
 				switch ac.SettingValue {
@@ -329,7 +278,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 		topic := "classroom/actuator/ky005"
 
 		// make it json
-		ac := Ac{
+		ac := types.Ac{
 			Ac:          true,
 			FanSpeed:    acSetting.FanSpeed,
 			Temperature: acSetting.Temperature,
