@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"github.com/drithh/smart-classroom/database"
 	"github.com/drithh/smart-classroom/fiber"
+	"github.com/drithh/smart-classroom/mqtt"
 	"github.com/joho/godotenv"
+
+	pahomqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 func main() {
@@ -18,8 +22,6 @@ func main() {
 	database.ConnectDB()
 	defer database.CloseDB()
 
-	fiber.SetupFiber(database.GetDB())
-
 	broker := os.Getenv("BROKER_HOST")
 	port := os.Getenv("BROKER_PORT")
 
@@ -28,19 +30,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	// intPort, err := strconv.Atoi(port)
+	intPort, err := strconv.Atoi(port)
 
-	// if err != nil {
-	// 	fmt.Println("Error: BROKER_PORT must be an integer")
-	// 	os.Exit(1)
-	// }
+	if err != nil {
+		fmt.Println("Error: BROKER_PORT must be an integer")
+		os.Exit(1)
+	}
 
-	// opts := mqtt.NewMQTTClientOptions(broker, intPort)
+	opts := mqtt.NewMQTTClientOptions(broker, intPort)
 
-	// client := pahomqtt.NewClient(opts)
-	// if token := client.Connect(); token.Wait() && token.Error() != nil {
-	// 	panic(token.Error())
-	// }
+	client := pahomqtt.NewClient(opts)
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
+	fiber.SetupFiber(database.GetDB(), client)
 
 	// Wait for a signal to interrupt the program
 	c := make(chan os.Signal, 1)

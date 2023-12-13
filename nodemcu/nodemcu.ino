@@ -12,16 +12,16 @@
 #include "wifi_functions.h"
 #include "mqtt_functions.h"
 
-const char *mqtt_topic_ldr = "classroom/sensor/ldr";   
-const char *mqtt_topic_ky005 = "classroom/actuator/ky005";   
+const char *mqtt_topic_ldr = "classroom/sensor/ldr";
+const char *mqtt_topic_ky005 = "classroom/actuator/ky005";
 const char *mqtt_topic_lamp1 = "classroom/actuator/lamp1";
 const char *mqtt_topic_lamp2 = "classroom/actuator/lamp2";
 const char *mqtt_topic_lamp3 = "classroom/actuator/lamp3";
 
 const int ldrPin = A0; // LDR sensor pin
 
-const uint16_t ky005Pin = D7;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
-IRPanasonicAc ac(ky005Pin);  // Set the GPIO used for sending messages.
+const uint16_t ky005Pin = D7; // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+IRPanasonicAc ac(ky005Pin);   // Set the GPIO used for sending messages.
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -29,12 +29,13 @@ PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 const long interval = 1000; // 1 second interval
 
-void printState() {
+void printState()
+{
   // Display the settings.
   Serial.println("Panasonic A/C remote is in the following state:");
   Serial.printf("  %s\n", ac.toString().c_str());
   // Display the encoded IR sequence.
-  unsigned char* ir_code = ac.getRaw();
+  unsigned char *ir_code = ac.getRaw();
   Serial.print("IR Code: 0x");
   for (uint8_t i = 0; i < kPanasonicAcStateLength; i++)
     Serial.printf("%02X", ir_code[i]);
@@ -63,7 +64,6 @@ void setup()
   pinMode(D1, OUTPUT); // Lamp 2
   pinMode(D2, OUTPUT); // Lamp 3
 
-
   ac.begin();
   delay(200);
 
@@ -73,7 +73,6 @@ void setup()
   Serial.println("Setting desired state for A/C.");
   ac.setModel(kPanasonicRkr);
   ac.on();
-  
 }
 
 void loop()
@@ -95,7 +94,7 @@ void loop()
     serializeJson(doc, jsonMsg);
 
     // Publish JSON-formatted LDR sensor data
-    client.publish(mqtt_topic_ldr, jsonMsg); 
+    client.publish(mqtt_topic_ldr, jsonMsg);
 
     // Update last message time
     lastMsg = currentMillis;
@@ -140,7 +139,7 @@ void processLampControl(const JsonDocument &doc, int pin)
 
 void processKY005Control(const JsonDocument &doc, int pin)
 {
-  bool state = doc["ac"];
+  bool state = doc["status"];
 
   // Check the state and perform the corresponding action
   if (state)
@@ -207,10 +206,9 @@ void callback(char *topic, byte *payload, unsigned int length)
     // Process the payload for lamp3 control
     processLampControl(doc, D2); // Specify the pin for lamp3
   }
-    else if (strcmp(topic, mqtt_topic_ky005) == 0)
+  else if (strcmp(topic, mqtt_topic_ky005) == 0)
   {
     // Process the payload for ky005 control
     processKY005Control(doc, ky005Pin); // Specify the pin for ky005
   }
 }
-

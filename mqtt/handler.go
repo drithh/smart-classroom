@@ -109,9 +109,10 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 
 					// make it json
 					ac := types.Ac{
-						Ac:          false,
-						FanSpeed:    0,
+						Status:      false,
 						Temperature: 24,
+						FanSpeed:    0,
+						Swing:       false,
 					}
 
 					// marshal to json
@@ -243,14 +244,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 			fmt.Println("Error selecting data from database: ", err)
 		}
 
-		type ACSetting struct {
-			Ac          bool `json:"ac"`
-			Temperature int  `json:"temperature"`
-			FanSpeed    int  `json:"fan_speed"`
-			Swing       bool `json:"swing"`
-		}
-
-		acSetting := ACSetting{}
+		acSetting := types.Ac{}
 
 		for _, ac := range acs {
 			switch ac.SettingName {
@@ -279,9 +273,10 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 
 		// make it json
 		ac := types.Ac{
-			Ac:          true,
-			FanSpeed:    acSetting.FanSpeed,
+			Status:      true,
 			Temperature: acSetting.Temperature,
+			FanSpeed:    acSetting.FanSpeed,
+			Swing:       acSetting.Swing,
 		}
 
 		// marshal to json

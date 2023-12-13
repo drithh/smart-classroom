@@ -1,6 +1,7 @@
 package fiber
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/gofiber/template/html/v2"
 	"github.com/jmoiron/sqlx"
 
+	pahomqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,7 +22,7 @@ func getSettingValue(ac types.Device, settingName string) string {
 	return "" // Return an empty string if the setting is not found
 }
 
-func SetupFiber(db *sqlx.DB) {
+func SetupFiber(db *sqlx.DB, mqtt pahomqtt.Client) {
 	engine := html.New("./fiber/templates", ".html")
 
 	// Reload the templates on each render, good for development
@@ -36,7 +38,18 @@ func SetupFiber(db *sqlx.DB) {
 	// Define your Fiber routes and handlers here
 	// For example, a simple route to handle HTTP requests
 	app.Get("/", func(c *fiber.Ctx) error {
-		setting := types.Setting{}
+		type Chart struct {
+			Label []string `db:"label"`
+			Value []string `db:"value"`
+		}
+		type Page struct {
+			types.Setting
+			Motion      Chart
+			Brightness  Chart
+			Humidity    Chart
+			Temperature Chart
+		}
+		setting := Page{}
 
 		err := db.Get(&setting.Pir, "SELECT timestamp, presence FROM pir_sensor_data WHERE presence = true ORDER BY id DESC LIMIT 1")
 		if err != nil {
@@ -111,23 +124,48 @@ func SetupFiber(db *sqlx.DB) {
 			}
 		})
 
-		// rende html
-		// return c.JSON(setting)
+		// chart
+		err = db.Select(&setting.Motion.Value, "SELECT presence FROM pir_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting motion chart data: ", err)
+		}
+
+		err = db.Select(&setting.Motion.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM pir_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting motion chart data: ", err)
+		}
+
+		err = db.Select(&setting.Brightness.Value, "SELECT 100 - light_intensity / 10.24 FROM ldr_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting brightness chart data: ", err)
+		}
+
+		err = db.Select(&setting.Brightness.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM ldr_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting brightness chart data: ", err)
+		}
+
+		err = db.Select(&setting.Humidity.Value, "SELECT humidity FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting humidity chart data: ", err)
+		}
+
+		err = db.Select(&setting.Humidity.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting humidity chart data: ", err)
+		}
+
+		err = db.Select(&setting.Temperature.Value, "SELECT temperature FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting temperature chart data: ", err)
+		}
+
+		err = db.Select(&setting.Temperature.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		if err != nil {
+			fmt.Println("Error getting temperature chart data: ", err)
+		}
+
 		return c.Render("index", setting)
-		// return json setting
-
-	})
-
-	app.Get("/charts/temperature", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, Fiber!")
-	})
-
-	app.Get("/charts/humidity", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, Fiber!")
-	})
-
-	app.Get("/charts/brightness", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, Fiber!")
 	})
 
 	app.Post("/devices/lamp", func(c *fiber.Ctx) error {
@@ -153,6 +191,25 @@ func SetupFiber(db *sqlx.DB) {
 		if err != nil {
 			fmt.Println("Error updating data into database: ", err)
 		}
+
+		topic := fmt.Sprintf("classroom/actuator/%s", form.DeviceId)
+
+		// make it json
+		led := types.Led{
+			Led:        form.Status,
+			Brightness: form.Brightness,
+		}
+
+		// marshal to json
+		ledJson, err := json.Marshal(led)
+
+		if err != nil {
+			fmt.Println("Error marshalling led data: ", err)
+		}
+
+		token := mqtt.Publish(topic, 1, false, ledJson)
+
+		token.Wait()
 
 		return nil
 
@@ -200,6 +257,31 @@ func SetupFiber(db *sqlx.DB) {
 		_, err = db.Exec("UPDATE device_settings SET setting_value = $1 WHERE device_id = $2 AND setting_name = $3", strSwing, form.DeviceId, "swing")
 		if err != nil {
 			fmt.Println("Error updating data into database: ", err)
+		}
+
+		topic := fmt.Sprintf("classroom/actuator/%s", form.DeviceId)
+
+		// make it json
+		ac := types.Ac{
+			Status:      form.Status,
+			Temperature: form.Temperature,
+			FanSpeed:    form.FanSpeed,
+			Swing:       form.Swing,
+		}
+
+		// marshal to json
+		acJson, err := json.Marshal(ac)
+
+		if err != nil {
+			fmt.Println("Error marshalling led data: ", err)
+		}
+
+		token := mqtt.Publish(topic, 1, false, acJson)
+
+		token.Wait()
+
+		if err != nil {
+			fmt.Println("Error marshalling led data: ", err)
 		}
 
 		return nil

@@ -58,18 +58,13 @@
           <a
             href="#motion-chart-container"
             data-bs-toggle="collapse"
+            style="height: 180px"
             class="text-decoration-none"
           >
             <div class="card border-0">
               <div class="card-body">
                 <div class="fs-5 text-center text-secondary">Last Motion</div>
                 <div class="d-flex align-items-center justify-content-evenly">
-                  <!-- <div>
-                    <i
-                      class="bi bi-person-standing"
-                      style="font-size: 3rem; color: #4dd4ac"
-                    ></i>
-                  </div> -->
                   <div
                     class="fs-1 fw-bold ms-2 text-center"
                     style="color: #4dd4ac"
@@ -84,6 +79,7 @@
         <div class="col-5 col-md-2 mb-3">
           <a
             href="#brightness-chart-container"
+            style="height: 180px"
             data-bs-toggle="collapse"
             class="text-decoration-none"
           >
@@ -109,6 +105,7 @@
         <div class="col-5 col-md-2 mb-3">
           <a
             href="#temperature-chart-container"
+            style="height: 180px"
             data-bs-toggle="collapse"
             class="text-decoration-none"
           >
@@ -134,6 +131,7 @@
         <div class="col-5 col-md-2 mb-3">
           <a
             href="#humidity-chart-container"
+            style="height: 180px"
             data-bs-toggle="collapse"
             class="text-decoration-none"
           >
@@ -440,15 +438,11 @@
       let motionChart = new Chart(motionCtx, {
         type: 'line',
         data: {
+          labels: [{{ range .Motion.Label }}'{{.}}', {{ end }}],
           datasets: [
             {
               label: 'Motion',
-              data: {
-                1: 'YES',
-                2: 'NO',
-                3: 'YES',
-                4: 'YES',
-              },
+              data: [{{ range .Motion.Value }}{{.}}, {{ end }}],
               borderWidth: 1,
             },
           ],
@@ -457,7 +451,7 @@
           scales: {
             y: {
               type: 'category',
-              labels: ['YES', 'NO'],
+              labels: ['true', 'false'],
               position: 'left',
               offset: true,
             },
@@ -470,19 +464,22 @@
       let brightnessChart = new Chart(brightnessCtx, {
         type: 'line',
         data: {
-          labels: ['1', '2', '3', '4', '5', '6'],
+          labels:  [{{ range .Brightness.Label }}'{{.}}', {{ end }}],
           datasets: [
             {
               label: 'Brightness',
-              data: [100, 80, 40, 50, 0, 70],
+              data:  [{{ range .Brightness.Value }}{{.}}, {{ end }}],
               borderWidth: 1,
             },
           ],
         },
         options: {
           scales: {
-            y: {
-              beginAtZero: true,
+            x: {
+              position: 'bottom',
+              ticks: {
+                stepSize: 20, // Set the step size to 1
+              },
             },
           },
         },
@@ -493,20 +490,24 @@
       let tempChart = new Chart(temperatureCtx, {
         type: 'line',
         data: {
-          labels: ['1', '2', '3', '4', '5', '6'],
+          labels: [{{ range .Temperature.Label }}'{{.}}', {{ end }}],
           datasets: [
             {
               label: 'Temperature',
-              data: [20, 18, 21, 19, 17, 16],
+              data: [{{ range .Temperature.Value }}{{.}}, {{ end }}],
               borderWidth: 1,
             },
           ],
         },
         options: {
           scales: {
-            y: {
-              beginAtZero: true,
+            x: {
+              position: 'bottom',
+              ticks: {
+                stepSize: 20, // Set the step size to 1
+              },
             },
+
           },
         },
       });
@@ -516,20 +517,24 @@
       let humidityChart = new Chart(humidityCtx, {
         type: 'line',
         data: {
-          labels: ['1', '2', '3', '4', '5', '6'],
+          labels: [{{ range .Humidity.Label }}'{{.}}', {{ end }}],
           datasets: [
             {
               label: 'Humidity',
-              data: [100, 80, 40, 50, 0, 70],
+              data: [{{ range .Humidity.Value }}{{.}}, {{ end }}],
               borderWidth: 1,
             },
           ],
         },
         options: {
           scales: {
-            y: {
-              beginAtZero: true,
+            x: {
+              position: 'bottom',
+              ticks: {
+                stepSize: 20, // Set the step size to 1
+              },
             },
+
           },
         },
       });
