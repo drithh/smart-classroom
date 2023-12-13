@@ -22,7 +22,7 @@ type Led struct {
 }
 
 type Ac struct {
-	Status      bool `json:"ac"`
+	Status      bool `json:"status"`
 	Temperature int  `json:"temperature"`
 	FanSpeed    int  `json:"fan_speed"`
 	Swing       bool `json:"swing"`

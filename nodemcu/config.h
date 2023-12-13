@@ -7,7 +7,7 @@ const char *ssid = "SW Home";
 const char *password = "informatika";
 
 // MQTT configuration
-const char *mqtt_server = "192.168.1.8";
+const char *mqtt_server = "157.245.154.110";
 // Device-specific MQTT credentials
 #ifdef DEVICE1
 const char *mqtt_username = "pir_dht11";

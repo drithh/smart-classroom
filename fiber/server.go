@@ -22,6 +22,13 @@ func getSettingValue(ac types.Device, settingName string) string {
 	return "" // Return an empty string if the setting is not found
 }
 
+func setupQuery(outputColumns string, columns string, table string) string {
+
+	query := fmt.Sprintf("SELECT %s FROM (SELECT id, %s FROM %s ORDER BY id DESC LIMIT 200) AS subquery ORDER BY id ASC", outputColumns, columns, table)
+	fmt.Println(query)
+	return query
+}
+
 func SetupFiber(db *sqlx.DB, mqtt pahomqtt.Client) {
 	engine := html.New("./fiber/templates", ".html")
 
@@ -123,44 +130,43 @@ func SetupFiber(db *sqlx.DB, mqtt pahomqtt.Client) {
 				return fmt.Sprintf("%d days ago", int(minutes/1440))
 			}
 		})
-
 		// chart
-		err = db.Select(&setting.Motion.Value, "SELECT presence FROM pir_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Motion.Value, setupQuery("presence", "presence", "pir_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting motion chart data: ", err)
 		}
 
-		err = db.Select(&setting.Motion.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM pir_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Motion.Label, setupQuery("label", "TO_CHAR(timestamp, 'HH24:MI') AS label", "pir_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting motion chart data: ", err)
 		}
 
-		err = db.Select(&setting.Brightness.Value, "SELECT 100 - light_intensity / 10.24 FROM ldr_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Brightness.Value, setupQuery("value", "100 - light_intensity / 10.24 as value", "ldr_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting brightness chart data: ", err)
 		}
 
-		err = db.Select(&setting.Brightness.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM ldr_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Brightness.Label, setupQuery("label", "TO_CHAR(timestamp, 'HH24:MI') AS label", "ldr_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting brightness chart data: ", err)
 		}
 
-		err = db.Select(&setting.Humidity.Value, "SELECT humidity FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Humidity.Value, setupQuery("humidity", "humidity", "dht11_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting humidity chart data: ", err)
 		}
 
-		err = db.Select(&setting.Humidity.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Humidity.Label, setupQuery("label", "TO_CHAR(timestamp, 'HH24:MI') AS label", "dht11_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting humidity chart data: ", err)
 		}
 
-		err = db.Select(&setting.Temperature.Value, "SELECT temperature FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Temperature.Value, setupQuery("temperature", "temperature", "dht11_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting temperature chart data: ", err)
 		}
 
-		err = db.Select(&setting.Temperature.Label, "SELECT TO_CHAR(timestamp, 'HH24:MI') AS label FROM dht11_sensor_data ORDER BY id DESC LIMIT 200")
+		err = db.Select(&setting.Temperature.Label, setupQuery("label", "TO_CHAR(timestamp, 'HH24:MI') AS label", "dht11_sensor_data"))
 		if err != nil {
 			fmt.Println("Error getting temperature chart data: ", err)
 		}

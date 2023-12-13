@@ -31,6 +31,7 @@ var setting = types.Setting{
 }
 
 var lastUpdatedAcTime int64 = 0
+var pirContinue bool = false
 
 var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg pahomqtt.Message) {
 	db := database.GetDB()
@@ -50,6 +51,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 
 		// check if the value is different from the previous one
 		if setting.Pir.PirStatus != marshalledData.PirStatus {
+			pirContinue = true
 			setting.Pir = marshalledData
 			fmt.Println("PIR sensor data changed to: ", marshalledData.PirStatus)
 			if !setting.Pir.PirStatus {
@@ -59,10 +61,10 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 				} else {
 					fmt.Println("Turning off every lamp")
 					lamps := []types.Device{}
-					err = db.Select(&lamps, "SELECT * FROM devices WHERE device_id similar to 'lamp%'")
+					err = db.Select(&lamps, "SELECT device_id, status FROM devices WHERE device_id similar to 'lamp%'")
 
 					if err != nil {
-						fmt.Println("Error selecting data from database: ", err)
+						fmt.Println("(PIR) Error selecting data from database: ", err)
 					}
 
 					for _, lamp := range lamps {
@@ -135,6 +137,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 				}
 			}
 		}
+
 	case ldrTopic:
 		marshalledData := types.LdrSensorData{}
 		err := json.Unmarshal(msg.Payload(), &marshalledData)
@@ -155,11 +158,11 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 		}
 
 		// select lamp
-		lamps := []types.DeviceSetting{}
-		err = db.Select(&lamps, "SELECT * FROM device_settings WHERE device_id similar to 'lamp%'")
+		lamps := []types.Device{}
+		err = db.Select(&lamps, "SELECT device_id, status FROM devices WHERE device_id similar to 'lamp%'")
 
 		if err != nil {
-			fmt.Println("Error selecting data from database: ", err)
+			fmt.Println("(LDR) Error selecting data from database: ", err)
 		}
 
 		// map brightness value from 0-1023 to 0-100
@@ -167,10 +170,17 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 
 		for _, lamp := range lamps {
 			topic := fmt.Sprintf("classroom/actuator/%s", lamp.DeviceId)
+			fmt.Println("Lamp setting value: ", lamp.DeviceId)
+
+			err = db.Select(&lamp.Setting, "SELECT device_id, setting_name, setting_value FROM device_settings WHERE device_id = $1 AND setting_name = $2", lamp.DeviceId, "brightness")
+
+			if err != nil {
+				fmt.Println("(LAMP) Error selecting data from database: ", err)
+			}
 
 			// average brightness value from lamp setting and expected brightness value
 			// convert lamp.SettingValue to int
-			lampBrightness, err := strconv.Atoi(lamp.SettingValue)
+			lampBrightness, err := strconv.Atoi(lamp.Setting[0].SettingValue)
 
 			if err != nil {
 				fmt.Println("Error converting lamp setting value to int: ", err)
@@ -181,11 +191,11 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 				// update lamp setting value
 
 				expectedBrightness := lampBrightness * 255 / 100
-				fmt.Println("Brightness value for ", lamp.DeviceId, " is: ", expectedBrightness, "with lamp setting value: ", lampBrightness, "and ldr value: ", brightness)
+				fmt.Println("Brightness value for ", lamp.DeviceId, " is: ", expectedBrightness, "with lamp setting value: ", lampBrightness, "and ldr value: ", brightness, "with difference: ", lampBrightness-brightness)
 
 				// make it json
 				led := types.Led{
-					Led:        true,
+					Led:        lamp.Status,
 					Brightness: expectedBrightness,
 				}
 
@@ -207,15 +217,21 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 				case "lamp3":
 					setting.Lamp3.Status = true
 				}
-				_, err = db.Exec("UPDATE devices SET status = $1 WHERE device_id = $2", true, lamp.DeviceId)
 
-				if err != nil {
-					fmt.Println("Error updating data into database: ", err)
+				if pirContinue {
+					_, err = db.Exec("UPDATE devices SET status = $1 WHERE device_id = $2", true, lamp.DeviceId)
+
+					if err != nil {
+						fmt.Println("Error updating data into database: ", err)
+					}
 				}
+
 			} else {
-				fmt.Println("Brightness value for ", lamp.DeviceId, " is: ", brightness, "with lamp setting value: ", lampBrightness, "and ldr value: ", brightness)
-				fmt.Println("No need to update lamp setting value")
+				fmt.Println("No need to update lamp setting value because the difference is ", lampBrightness-brightness)
 			}
+		}
+		if pirContinue {
+			pirContinue = false
 		}
 
 	case dht11Topic:
@@ -239,9 +255,9 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 
 		// select ac
 		acs := []types.DeviceSetting{}
-		err = db.Select(&acs, "SELECT * FROM device_settings WHERE device_id similar to 'ac%'")
+		err = db.Select(&acs, "SELECT device_id, setting_name, setting_value FROM device_settings WHERE device_id similar to 'ac%'")
 		if err != nil {
-			fmt.Println("Error selecting data from database: ", err)
+			fmt.Println("(AC) Error selecting data from database: ", err)
 		}
 
 		acSetting := types.Ac{}
@@ -285,7 +301,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 		if err != nil {
 			fmt.Println("Error marshalling led data: ", err)
 		}
-
+		fmt.Println("AC setting value: ", ac.Status, ac.Temperature, ac.FanSpeed, ac.Swing)
 		token := client.Publish(topic, 1, false, acJson)
 		token.Wait()
 

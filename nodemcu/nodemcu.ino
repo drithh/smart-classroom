@@ -87,7 +87,7 @@ void loop()
 
     // Create a JSON document
     StaticJsonDocument<200> doc;
-    doc["ldrValue"] = ldrValue;
+    doc["Brightness"] = ldrValue;
 
     // Serialize the JSON document to a char array
     char jsonMsg[200];
@@ -147,12 +147,16 @@ void processKY005Control(const JsonDocument &doc, int pin)
     // Turn on the KY005 device (assuming the specified pin)
     // Add your KY005-specific code here
     // digitalWrite(pin, HIGH);
+    bool swing = doc["swing"];
+    int temperature = doc["temperature"];
+    int fan = doc["fan_speed"];
+    
     ac.on();
-    ac.setFan(kPanasonicAcFanAuto);
+    ac.setFan(fan);
     ac.setMode(kPanasonicAcCool);
-    ac.setTemp(26);
-    ac.setSwingVertical(kPanasonicAcSwingVAuto);
-    ac.setSwingHorizontal(kPanasonicAcSwingHAuto);
+    ac.setTemp(temperature);
+    ac.setSwingVertical(swing ? kPanasonicAcSwingVAuto : kPanasonicAcSwingVMiddle);
+    ac.setSwingHorizontal(swing ? kPanasonicAcSwingHAuto : kPanasonicAcSwingHMiddle);
     Serial.println("Turning ON AC");
     ac.send();
   }
@@ -160,6 +164,7 @@ void processKY005Control(const JsonDocument &doc, int pin)
   {
     // digitalWrite(pin, LOW);
     ac.off();
+    ac.send();
     Serial.println("Turning OFF AC");
   }
   printState();

@@ -54,100 +54,89 @@
 
     <div class="bg-light pt-4">
       <div class="row d-flex justify-content-evenly">
-        <div class="col-5 col-md-2 mb-3">
+        <div class="col-10 col-md-2 mb-3 card border-0">
           <a
             href="#motion-chart-container"
             data-bs-toggle="collapse"
-            style="height: 180px"
             class="text-decoration-none"
           >
-            <div class="card border-0">
-              <div class="card-body">
-                <div class="fs-5 text-center text-secondary">Last Motion</div>
-                <div class="d-flex align-items-center justify-content-evenly">
-                  <div
-                    class="fs-1 fw-bold ms-2 text-center"
-                    style="color: #4dd4ac"
-                  >
-                    {{ GetTimeSince .Pir.Timestamp }}
-                  </div>
+            <div class="card-body">
+              <div class="fs-5 text-center text-secondary">Last Motion</div>
+              <div class="d-flex align-items-center justify-content-evenly">
+                <div
+                  class="fs-3 fw-bold ms-3 text-center"
+                  style="color: #4dd4ac"
+                >
+                  {{ GetTimeSince .Pir.Timestamp }}
                 </div>
               </div>
             </div>
           </a>
         </div>
-        <div class="col-5 col-md-2 mb-3">
+
+        <div class="col-10 col-md-2 mb-3 card border-0">
           <a
             href="#brightness-chart-container"
-            style="height: 180px"
             data-bs-toggle="collapse"
             class="text-decoration-none"
           >
-            <div class="card border-0">
-              <div class="card-body">
-                <div class="fs-5 text-center text-secondary">Brightness</div>
-                <div class="d-flex align-items-center justify-content-evenly">
-                  <div>
-                    <i
-                      class="bi bi-brightness-high"
-                      style="font-size: 3rem; color: #4dd4ac"
-                    ></i>
-                  </div>
-                  <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
-                    {{ .Ldr.Brightness }}%
-                  </div>
+            <div class="card-body">
+              <div class="fs-5 text-center text-secondary">Brightness</div>
+              <div class="d-flex align-items-center justify-content-evenly">
+                <div>
+                  <i
+                    class="bi bi-brightness-high"
+                    style="font-size: 3rem; color: #4dd4ac"
+                  ></i>
+                </div>
+                <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
+                  {{ .Ldr.Brightness }}%
                 </div>
               </div>
             </div>
           </a>
         </div>
 
-        <div class="col-5 col-md-2 mb-3">
+        <div class="col-10 col-md-2 mb-3 card border-0">
           <a
             href="#temperature-chart-container"
-            style="height: 180px"
             data-bs-toggle="collapse"
             class="text-decoration-none"
           >
-            <div class="card border-0">
-              <div class="card-body">
-                <div class="fs-5 text-center text-secondary">Temperature</div>
-                <div class="d-flex align-items-center justify-content-evenly">
-                  <div>
-                    <i
-                      class="bi bi-thermometer"
-                      style="font-size: 3rem; color: #4dd4ac"
-                    ></i>
-                  </div>
-                  <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
-                    {{ .Dht11.Temperature }}°C
-                  </div>
+            <div class="card-body">
+              <div class="fs-5 text-center text-secondary">Temperature</div>
+              <div class="d-flex align-items-center justify-content-evenly">
+                <div>
+                  <i
+                    class="bi bi-thermometer"
+                    style="font-size: 3rem; color: #4dd4ac"
+                  ></i>
+                </div>
+                <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
+                  {{ .Dht11.Temperature }}°C
                 </div>
               </div>
             </div>
           </a>
         </div>
 
-        <div class="col-5 col-md-2 mb-3">
+        <div class="col-10 col-md-2 mb-3 card border-0">
           <a
             href="#humidity-chart-container"
-            style="height: 180px"
             data-bs-toggle="collapse"
             class="text-decoration-none"
           >
-            <div class="card border-0">
-              <div class="card-body">
-                <div class="fs-5 text-center text-secondary">Humidity</div>
-                <div class="d-flex align-items-center justify-content-evenly">
-                  <div>
-                    <i
-                      class="bi bi-droplet"
-                      style="font-size: 3rem; color: #4dd4ac"
-                    ></i>
-                  </div>
-                  <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
-                    {{ .Dht11.Humidity }}%
-                  </div>
+            <div class="card-body">
+              <div class="fs-5 text-center text-secondary">Humidity</div>
+              <div class="d-flex align-items-center justify-content-evenly">
+                <div>
+                  <i
+                    class="bi bi-droplet"
+                    style="font-size: 3rem; color: #4dd4ac"
+                  ></i>
+                </div>
+                <div class="fs-1 fw-bold ms-3" style="color: #4dd4ac">
+                  {{ .Dht11.Humidity }}%
                 </div>
               </div>
             </div>
@@ -475,6 +464,10 @@
         },
         options: {
           scales: {
+            y: {
+              min: 0,
+              max: 100,
+            },
             x: {
               position: 'bottom',
               ticks: {
