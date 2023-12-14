@@ -227,7 +227,7 @@ func SetupFiber(db *sqlx.DB, mqtt pahomqtt.Client) {
 			Status      bool   `form:"status"`
 			Temperature int    `form:"temperature"`
 			FanSpeed    int    `form:"fan_speed"`
-			Swing       bool   `form:"swing"`
+			Swing       string `form:"swing"`
 		}
 
 		form := new(Ac)
@@ -245,10 +245,6 @@ func SetupFiber(db *sqlx.DB, mqtt pahomqtt.Client) {
 
 		strTemperature := fmt.Sprintf("%d", form.Temperature)
 		strFanSpeed := fmt.Sprintf("%d", form.FanSpeed)
-		strSwing := "off"
-		if form.Swing {
-			strSwing = "on"
-		}
 
 		_, err = db.Exec("UPDATE device_settings SET setting_value = $1 WHERE device_id = $2 AND setting_name = $3", strTemperature, form.DeviceId, "temperature")
 		if err != nil {
@@ -260,7 +256,7 @@ func SetupFiber(db *sqlx.DB, mqtt pahomqtt.Client) {
 			fmt.Println("Error updating data into database: ", err)
 		}
 
-		_, err = db.Exec("UPDATE device_settings SET setting_value = $1 WHERE device_id = $2 AND setting_name = $3", strSwing, form.DeviceId, "swing")
+		_, err = db.Exec("UPDATE device_settings SET setting_value = $1 WHERE device_id = $2 AND setting_name = $3", form.Swing, form.DeviceId, "swing")
 		if err != nil {
 			fmt.Println("Error updating data into database: ", err)
 		}

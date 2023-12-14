@@ -155,8 +155,8 @@ void processKY005Control(const JsonDocument &doc, int pin)
     ac.setFan(fan);
     ac.setMode(kPanasonicAcCool);
     ac.setTemp(temperature);
-    ac.setSwingVertical(swing ? kPanasonicAcSwingVAuto : kPanasonicAcSwingVMiddle);
-    ac.setSwingHorizontal(swing ? kPanasonicAcSwingHAuto : kPanasonicAcSwingHMiddle);
+    ac.setSwingVertical(swing == "on" ? kPanasonicAcSwingVAuto : kPanasonicAcSwingVMiddle);
+    ac.setSwingHorizontal(swing == "on" ? kPanasonicAcSwingHAuto : kPanasonicAcSwingHMiddle);
     Serial.println("Turning ON AC");
     ac.send();
   }

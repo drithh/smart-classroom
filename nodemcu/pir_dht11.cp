@@ -47,7 +47,7 @@ void loop()
     {
       // Publish PIR sensor data
       StaticJsonDocument<200> pirDoc;
-      pirDoc["pirStatus"] = pirValue;
+      pirDoc["pirStatus"] = pirValue == 1 ? true : false;
       char pirJsonMsg[200];
       serializeJson(pirDoc, pirJsonMsg);
       client.publish(mqtt_topic_pir, pirJsonMsg);

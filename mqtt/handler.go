@@ -114,7 +114,7 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 						Status:      false,
 						Temperature: 24,
 						FanSpeed:    0,
-						Swing:       false,
+						Swing:       "off",
 					}
 
 					// marshal to json
@@ -275,53 +275,45 @@ var MessagePubHandler pahomqtt.MessageHandler = func(client pahomqtt.Client, msg
 					fmt.Println("Error converting ac setting value to int: ", err)
 				}
 			case "swing":
-				switch ac.SettingValue {
-				case "on":
-					acSetting.Swing = true
-				case "off":
-					acSetting.Swing = false
-				}
+				acSetting.Swing = ac.SettingValue
 			}
+
+			// publish ac setting
+			topic := "classroom/actuator/ky005"
+
+			// make it json
+			ac := types.Ac{
+				Status:      true,
+				Temperature: acSetting.Temperature,
+				FanSpeed:    acSetting.FanSpeed,
+				Swing:       acSetting.Swing,
+			}
+
+			// marshal to json
+			acJson, err := json.Marshal(ac)
+
+			if err != nil {
+				fmt.Println("Error marshalling led data: ", err)
+			}
+			fmt.Println("AC setting value: ", ac.Status, ac.Temperature, ac.FanSpeed, ac.Swing)
+			token := client.Publish(topic, 1, false, acJson)
+			token.Wait()
+
+			// update ac setting value
+			setting.Ac.Status = true
+			_, err = db.Exec("UPDATE devices SET status = $1 WHERE device_id = $2", true, "ac")
+
+			if err != nil {
+				fmt.Println("Error updating data into database: ", err)
+			}
+
+			// update lastUpdatedAcTime to current time
+			lastUpdatedAcTime = time.Now().Unix()
+			fmt.Println("AC setting updated to: ", lastUpdatedAcTime)
+			fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 		}
-
-		// publish ac setting
-		topic := "classroom/actuator/ky005"
-
-		// make it json
-		ac := types.Ac{
-			Status:      true,
-			Temperature: acSetting.Temperature,
-			FanSpeed:    acSetting.FanSpeed,
-			Swing:       acSetting.Swing,
-		}
-
-		// marshal to json
-		acJson, err := json.Marshal(ac)
-
-		if err != nil {
-			fmt.Println("Error marshalling led data: ", err)
-		}
-		fmt.Println("AC setting value: ", ac.Status, ac.Temperature, ac.FanSpeed, ac.Swing)
-		token := client.Publish(topic, 1, false, acJson)
-		token.Wait()
-
-		// update ac setting value
-		setting.Ac.Status = true
-		_, err = db.Exec("UPDATE devices SET status = $1 WHERE device_id = $2", true, "ac")
-
-		if err != nil {
-			fmt.Println("Error updating data into database: ", err)
-		}
-
-		// update lastUpdatedAcTime to current time
-		lastUpdatedAcTime = time.Now().Unix()
-		fmt.Println("AC setting updated to: ", lastUpdatedAcTime)
-
-	default:
-		fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 	}
 }
-
 var ConnectHandler pahomqtt.OnConnectHandler = func(client pahomqtt.Client) {
 	fmt.Println("Connected")
 

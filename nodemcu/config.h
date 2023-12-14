@@ -3,8 +3,8 @@
 #define CONFIG_H
 
 // Wi-Fi configuration
-const char *ssid = "SW Home";
-const char *password = "informatika";
+const char *ssid = "adriel";
+const char *password = "12345678";
 
 // MQTT configuration
 const char *mqtt_server = "157.245.154.110";
